@@ -1,17 +1,38 @@
 import { IncomingMessage } from 'http';
-
-interface RequestHandler<T> {
-  (req: IncomingMessage): T;
+import qs, { ParsedQs } from 'qs';
+interface RequestData<T = unknown> {
+  querystring: ParsedQs;
+  parameters: Record<string, string>;
+  body: T;
 }
 
-let RouteMap = new Map<string, Map<string, RequestHandler<unknown>>>();
+interface RequestHandler<Body = unknown, Response = unknown> {
+  (data: RequestData<Body>, req: IncomingMessage): Response;
+}
 
-RouteMap.set('GET', new Map<string, RequestHandler<unknown>>());
-RouteMap.set('POST', new Map<string, RequestHandler<unknown>>());
-RouteMap.set('PUT', new Map<string, RequestHandler<unknown>>());
-RouteMap.set('DELETE', new Map<string, RequestHandler<unknown>>());
+type Route<Body = unknown, Response = unknown> = [string, RequestHandler<Body, Response>];
 
-export async function route(req: IncomingMessage): Promise<unknown> {
+interface ParamaterizedRoute {
+  route: Route;
+  parameters: Record<string, string>;
+}
+
+export function routeKey(route: Route): string {
+  return route[0];
+}
+
+export function routeHandler(route: Route): RequestHandler {
+  return route[1];
+}
+
+let RouteMap = new Map<string, Route[]>();
+
+RouteMap.set('GET', []);
+RouteMap.set('POST', []);
+RouteMap.set('PUT', []);
+RouteMap.set('DELETE', []);
+
+export async function route(req: IncomingMessage, body: unknown): Promise<unknown> {
   if (!req.method) {
     throw new Error('Request method missing');
   }
@@ -26,18 +47,72 @@ export async function route(req: IncomingMessage): Promise<unknown> {
     throw new Error(`No matching HTTP method for [${req.method}]`);
   }
 
-  const url = decodeURI(req.url.split('?')[0]);
+  const [path, query] = req.url.split('?');
 
-  const handler = methodMap.get(url);
+  const url = cleanUrl(path);
 
-  if (!handler) {
+  const matchRouteResult = matchRoute(url, methodMap);
+
+  if (!matchRouteResult) {
     throw new Error(`No handler defined for [${req.method}] [${url}]`);
   }
 
-  return await handler(req);
+  const { route, parameters } = matchRouteResult;
+
+  return await routeHandler(route)({ parameters, querystring: qs.parse(query), body }, req);
 }
 
-export function createRoute<T>(method: string, url: string, handler: RequestHandler<T>): void {
+export function matchRoute(url: string, routes: Route[]): ParamaterizedRoute | undefined {
+  const urlPieces = url.split('/');
+
+  for (const route of routes) {
+    const key = routeKey(route);
+    const routePieces = key.split('/');
+    const parameters: Record<string, string> = {};
+
+    if (routePieces.length !== urlPieces.length) {
+      continue;
+    }
+
+    let isMatch = true;
+
+    for (let i = 0; i < routePieces.length; i++) {
+      const routePiece = routePieces[i];
+      const urlPiece = urlPieces[i];
+
+      if (routePiece === urlPiece) {
+        continue;
+      }
+
+      const match = routePiece.match(/^:(\w+)/);
+
+      if (!match) {
+        isMatch = false;
+        break;
+      }
+
+      const [, parameterName] = match;
+      parameters[parameterName] = urlPiece;
+    }
+
+    if (isMatch) {
+      return {
+        route,
+        parameters,
+      };
+    }
+  }
+}
+
+export function cleanUrl(url: string): string {
+  return (url.startsWith('/') ? url : `/${url}`).replace(/\/{2,}/g, '/');
+}
+
+export function createRoute<BODY = unknown, RESPONSE = unknown>(
+  method: string,
+  url: string,
+  handler: RequestHandler<BODY, RESPONSE>
+): void {
   const methodMap = RouteMap.get(method);
 
   if (!methodMap) {
@@ -48,7 +123,8 @@ export function createRoute<T>(method: string, url: string, handler: RequestHand
     throw new Error(`Unable to route an empty URL, use / for the root URL`);
   }
 
-  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-
-  RouteMap = RouteMap.set(method, methodMap.set(cleanUrl, handler));
+  RouteMap = RouteMap.set(method, [
+    ...methodMap,
+    [cleanUrl(url), handler as RequestHandler<unknown, unknown>],
+  ]);
 }
