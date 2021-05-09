@@ -1,13 +1,14 @@
 import { IncomingMessage } from 'http';
 import qs, { ParsedQs } from 'qs';
-interface RequestData<T = unknown> {
+import { BadRequestError } from './errors';
+export interface RequestData<Body = unknown> {
   querystring: ParsedQs;
   parameters: Record<string, string>;
-  body: T;
+  body: Body;
 }
 
-interface RequestHandler<Body = unknown, Response = unknown> {
-  (data: RequestData<Body>, req: IncomingMessage): Response;
+export interface RequestHandler<Body = unknown, Response = unknown> {
+  (data: RequestData<Body>, req: IncomingMessage): Response | Promise<Response>;
 }
 
 type Route<Body = unknown, Response = unknown> = [string, RequestHandler<Body, Response>];
@@ -127,4 +128,17 @@ export function createRoute<BODY = unknown, RESPONSE = unknown>(
     ...methodMap,
     [cleanUrl(url), handler as RequestHandler<unknown, unknown>],
   ]);
+}
+
+export function validate<BODY = unknown, RESPONSE = unknown>(
+  validator: (body: BODY) => body is BODY,
+  handler: RequestHandler<BODY, RESPONSE>
+): RequestHandler<BODY, RESPONSE> {
+  return (data, req) => {
+    if (!validator(data.body)) {
+      throw new BadRequestError('The request body is not in the correct format');
+    }
+
+    return handler(data, req);
+  };
 }

@@ -1,7 +1,8 @@
 import http, { IncomingMessage } from 'http';
+import { HttpError } from './errors';
 import { route } from './router';
 
-async function readBody(request: IncomingMessage): Promise<unknown> {
+async function readBody(request: IncomingMessage): Promise<string | undefined> {
   return new Promise((resolve, reject) => {
     let body = Buffer.from('', 'utf-8');
 
@@ -11,7 +12,7 @@ async function readBody(request: IncomingMessage): Promise<unknown> {
       })
       .on('end', () => {
         if (body.length > 0) {
-          resolve(JSON.parse(body.toString('utf-8')));
+          resolve(body.toString('utf-8'));
         } else {
           resolve(undefined);
         }
@@ -25,7 +26,7 @@ const server = http.createServer(async (req, res) => {
   try {
     console.log(req.url);
     const body = await readBody(req);
-    const response = await route(req, body);
+    const response = await route(req, body ? JSON.parse(body) : undefined);
     res.write(
       JSON.stringify({
         type: 'success',
@@ -34,15 +35,25 @@ const server = http.createServer(async (req, res) => {
     );
     res.end();
   } catch (exception) {
-    res.statusCode = 500;
-    res.write(
-      JSON.stringify({
-        type: 'error',
-        data: {
-          message: exception.message,
-        },
-      })
-    );
+    if (exception instanceof HttpError) {
+      res.statusCode = exception.statusCode;
+      res.write(
+        JSON.stringify({
+          type: exception.errorCode,
+          data: exception.data,
+        })
+      );
+    } else {
+      res.statusCode = 500;
+      res.write(
+        JSON.stringify({
+          type: 'error',
+          data: {
+            message: exception.message,
+          },
+        })
+      );
+    }
     res.end();
   }
 });
