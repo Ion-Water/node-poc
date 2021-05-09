@@ -8,4 +8,4 @@ createRoute('POST', '/register/user', registerUserHandler);
 createRoute('POST', '/send', sendHandler);
 createRoute('POST', '/receive', receiveHandler);
 
-start(process.env.PORT || 6000);
+start(Number(process.env.PORT) || 6000);
