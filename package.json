@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsc --watch & nodemon dist/index",
-    "start": "node dist/index"
+    "start": "node dist/index",
+    "postinstall": "npx tsc"
   },
   "devDependencies": {
     "@types/joi": "^17.2.3",
