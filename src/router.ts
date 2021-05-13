@@ -1,4 +1,4 @@
-import { IncomingMessage } from 'http';
+import { IncomingMessage, ServerResponse } from 'http';
 import qs, { ParsedQs } from 'qs';
 import { BadRequestError } from './errors';
 export interface RequestData<Body = unknown> {
@@ -8,7 +8,9 @@ export interface RequestData<Body = unknown> {
 }
 
 export interface RequestHandler<Body = unknown, Response = unknown> {
-  (data: RequestData<Body>, req: IncomingMessage): Response | Promise<Response>;
+  (data: RequestData<Body>, req: IncomingMessage, res: ServerResponse):
+    | Response
+    | Promise<Response>;
 }
 
 type Route<Body = unknown, Response = unknown> = [string, RequestHandler<Body, Response>];
@@ -33,13 +35,23 @@ RouteMap.set('POST', []);
 RouteMap.set('PUT', []);
 RouteMap.set('DELETE', []);
 
-export async function route(req: IncomingMessage, body: unknown): Promise<unknown> {
+export async function route(
+  req: IncomingMessage,
+  res: ServerResponse,
+  body: unknown
+): Promise<unknown> {
   if (!req.method) {
     throw new Error('Request method missing');
   }
 
   if (!req.url) {
     throw new Error('Missing URL');
+  }
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Allow', 'OPTIONS, GET, POST, PUT, DELETE');
+    res.statusCode = 204;
+    return;
   }
 
   const methodMap = RouteMap.get(req.method);
@@ -60,7 +72,7 @@ export async function route(req: IncomingMessage, body: unknown): Promise<unknow
 
   const { route, parameters } = matchRouteResult;
 
-  return await routeHandler(route)({ parameters, querystring: qs.parse(query), body }, req);
+  return await routeHandler(route)({ parameters, querystring: qs.parse(query), body }, req, res);
 }
 
 export function matchRoute(url: string, routes: Route[]): ParamaterizedRoute | undefined {
@@ -134,11 +146,11 @@ export function validate<BODY = unknown, RESPONSE = unknown>(
   validator: (body: BODY) => body is BODY,
   handler: RequestHandler<BODY, RESPONSE>
 ): RequestHandler<BODY, RESPONSE> {
-  return (data, req) => {
+  return (data, req, res) => {
     if (!validator(data.body)) {
       throw new BadRequestError('The request body is not in the correct format');
     }
 
-    return handler(data, req);
+    return handler(data, req, res);
   };
 }
