@@ -1,6 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import qs, { ParsedQs } from 'qs';
-import { BadRequestError } from './errors';
 export interface RequestData<Body = unknown> {
   querystring: ParsedQs;
   parameters: Record<string, string>;
