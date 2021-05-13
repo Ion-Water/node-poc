@@ -1,7 +1,7 @@
 import { BadAuthorizationError, BadRequestError } from '../errors';
-import { RequestData, validate } from '../router';
+import { RequestData } from '../router';
 import { Mailbox, validUser } from '../store/user';
-import { SimpleMessageResponse, validateWithJoi } from './shared';
+import { SimpleMessageResponse, validate, validateWithJoi } from './shared';
 import Joi from 'joi';
 import { v4 as uuid } from 'uuid';
 
