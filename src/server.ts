@@ -23,6 +23,8 @@ async function readBody(request: IncomingMessage): Promise<string | undefined> {
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', '*');
   try {
     console.log(req.url);
     const body = await readBody(req);
