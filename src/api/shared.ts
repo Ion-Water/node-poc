@@ -9,7 +9,7 @@ export function validateWithJoi<BODY = unknown>(schema: Joi.Schema): (body: BODY
   return (body: BODY): body is BODY => {
     const valid = schema.validate(body);
     if (valid.error) {
-      console.error(valid.error);
+      console.error(JSON.stringify(valid.error, null, 2));
     }
     return !valid.error;
   };
