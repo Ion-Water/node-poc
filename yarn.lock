@@ -50,10 +50,10 @@
   dependencies:
     "@hapi/hoek" "^9.0.0"
 
-"@ion-water/node-sdk@^0.0.11":
-  version "0.0.11"
-  resolved "https://registry.yarnpkg.com/@ion-water/node-sdk/-/node-sdk-0.0.11.tgz#d9c27103800900a9f871eb4113317543190d9aad"
-  integrity sha512-A40TRBUH3nJDYkvWE5cwgVf/7XlYN57wF1DO9V3aDZ+JxMSxC3DNq3BjgkKU0OTZrH1Oho5HnoSjBm5uGJuRIw==
+"@ion-water/node-sdk@^0.0.12":
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/@ion-water/node-sdk/-/node-sdk-0.0.12.tgz#90b37800a70609e374763a63069da2e99719f84f"
+  integrity sha512-uzXN8knmN2whdj7c4NhPcoS0tb29WBR1mlPhQ9Vz6grRB1HofBflvQWLUPvX+2O94MllNBLj89DYtA5iPODtpw==
   dependencies:
     axios "^0.21.1"
     joi "^17.4.0"
