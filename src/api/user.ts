@@ -5,13 +5,13 @@ import { SimpleMessageResponse, validate, validateWithJoi } from './shared';
 
 import {
   AuthorizationMessage,
-  RegisterUserMessage,
+  RegisterUserMessageBody,
   RegisterUserMessageSchema,
 } from '@ion-water/node-sdk';
 
 async function registerUser({
   body,
-}: RequestData<AuthorizationMessage<RegisterUserMessage>>): Promise<SimpleMessageResponse> {
+}: RequestData<AuthorizationMessage<RegisterUserMessageBody>>): Promise<SimpleMessageResponse> {
   const { username, password } = body.data.register_user.user;
 
   if (!username || !password) {
