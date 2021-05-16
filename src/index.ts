@@ -8,4 +8,6 @@ createRoute('POST', '/register/user', registerUserHandler);
 createRoute('POST', '/send', sendHandler);
 createRoute('POST', '/receive', receiveHandler);
 
-start(Number(process.env.PORT) || 6000);
+// https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/net/base/port_util.cc
+// Port 6000 is restricted in chrome!
+start(Number(process.env.PORT) || 6006);
