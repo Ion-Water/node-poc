@@ -1,7 +1,6 @@
 import Joi from 'joi';
 import { BadRequestError } from '../errors';
 import { RequestHandler } from '../router';
-
 export interface SimpleMessageResponse {
   message: string;
 }

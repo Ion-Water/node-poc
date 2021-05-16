@@ -11,6 +11,7 @@
     "postinstall": "npx tsc"
   },
   "devDependencies": {
+    "@ion-water/node-sdk": "^0.0.7",
     "@types/joi": "^17.2.3",
     "@types/node": "^15.0.2",
     "@types/uuid": "^8.3.0",
@@ -23,8 +24,8 @@
   },
   "dependencies": {
     "@types/qs": "^6.9.6",
-    "uuid": "^8.3.2",
     "joi": "^17.4.0",
-    "qs": "^6.10.1"
+    "qs": "^6.10.1",
+    "uuid": "^8.3.2"
   }
 }
