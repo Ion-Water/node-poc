@@ -1,7 +1,7 @@
 import { BadRequestError } from '../errors';
-import { RequestData, validate } from '../router';
+import { RequestData } from '../router';
 import { Mailbox, Users } from '../store/user';
-import { SimpleMessageResponse, validateWithJoi } from './shared';
+import { SimpleMessageResponse, validate, validateWithJoi } from './shared';
 
 import {
   AuthorizationMessage,

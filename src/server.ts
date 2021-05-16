@@ -23,18 +23,23 @@ async function readBody(request: IncomingMessage): Promise<string | undefined> {
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', '*');
   try {
     console.log(req.url);
     const body = await readBody(req);
-    const response = await route(req, body ? JSON.parse(body) : undefined);
-    res.write(
-      JSON.stringify({
-        type: 'success',
-        data: response,
-      })
-    );
-    res.end();
+    const response = await route(req, res, body ? JSON.parse(body) : undefined);
+
+    if (response) {
+      res.write(
+        JSON.stringify({
+          type: 'success',
+          data: response,
+        })
+      );
+    }
   } catch (exception) {
+    console.error(exception);
     if (exception instanceof HttpError) {
       res.statusCode = exception.statusCode;
       res.write(
@@ -54,6 +59,7 @@ const server = http.createServer(async (req, res) => {
         })
       );
     }
+  } finally {
     res.end();
   }
 });

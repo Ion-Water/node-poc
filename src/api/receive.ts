@@ -1,7 +1,7 @@
 import { BadAuthorizationError, InternalServerError } from '../errors';
-import { RequestData, validate } from '../router';
+import { RequestData } from '../router';
 import { Mailbox, MailboxItem, validUser } from '../store/user';
-import { SimpleMessageResponse, validateWithJoi } from './shared';
+import { SimpleMessageResponse, validate, validateWithJoi } from './shared';
 import Joi from 'joi';
 
 interface ReceiveRequest {
