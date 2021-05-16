@@ -27,7 +27,7 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@ion-water/node-sdk": "^0.0.7",
+    "@ion-water/node-sdk": "^0.0.10",
     "@types/qs": "^6.9.6",
     "argon2": "^0.27.2",
     "dotenv": "^9.0.2",
