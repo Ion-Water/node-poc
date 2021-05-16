@@ -29,6 +29,7 @@
   "dependencies": {
     "@ion-water/node-sdk": "^0.0.7",
     "@types/qs": "^6.9.6",
+    "argon2": "^0.27.2",
     "dotenv": "^9.0.2",
     "joi": "^17.4.0",
     "pg": "^8.6.0",
