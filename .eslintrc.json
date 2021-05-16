@@ -9,6 +9,14 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    }
+  ],
   "plugins": ["@typescript-eslint"],
   "rules": {}
 }

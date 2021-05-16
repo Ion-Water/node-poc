@@ -1,5 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import qs, { ParsedQs } from 'qs';
+import { createConnection, getConnectionManager } from 'typeorm';
+import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { Entities } from './entities';
 export interface RequestData<Body = unknown> {
   querystring: ParsedQs;
   parameters: Record<string, string>;
@@ -70,6 +73,24 @@ export async function route(
   }
 
   const { route, parameters } = matchRouteResult;
+
+  if (!getConnectionManager().has('default')) {
+    await createConnection({
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      ssl: true,
+      extra: {
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      },
+      entities: Entities,
+    } as PostgresConnectionOptions);
+  }
 
   return await routeHandler(route)({ parameters, querystring: qs.parse(query), body }, req, res);
 }

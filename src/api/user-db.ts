@@ -1,92 +1,109 @@
-// import { RequestData } from '../router';
-// import { validate, validateWithJoi } from './shared';
+import { RequestData } from '../router';
+import { validate, validateWithJoi } from './shared';
 
-// import {
-//   AuthorizationMessage,
-//   RegisterUserMessage,
-//   RegisterUserMessageSchema,
-//   LoginUserMessage,
-//   LoginUserSuccess,
-//   AnySuccessData,
-//   BadAuthorizationError,
-//   BadRequestError,
-// } from '@ion-water/node-sdk';
-// import { UserEntity } from '../entities/User';
-// import { getRepository } from 'typeorm';
-// import { hash as argonHash, verify as argonVerify } from 'argon2';
+import {
+  AuthorizationMessage,
+  RegisterUserMessageBody,
+  RegisterUserMessageSchema,
+  LoginUserMessageBody,
+  LoginUserSuccess,
+  AnySuccessData,
+  BadAuthorizationError,
+  BadRequestError,
+  LoginUserMessageSchema,
+} from '@ion-water/node-sdk';
+import { UserEntity } from '../entities/User';
+import { getRepository } from 'typeorm';
+import { hash as argonHash, verify as argonVerify } from 'argon2';
+import { newSession, SessionEntity } from '../entities/Session';
+import { parseISO } from 'date-fns';
 
-// // This hash is the hashed value of 'password';
-// const KNOWN_HASH =
-//   '$argon2i$v=19$m=4096,t=3,p=1$XLZf0gz5MyGl6Jy99sBd9Q$xGGQcT0Kn1VPcFztbSCpbDxbogcZSjAQuM6qv126Qes';
+// This hash is the hashed value of 'password';
+const KNOWN_HASH =
+  '$argon2i$v=19$m=4096,t=3,p=1$XLZf0gz5MyGl6Jy99sBd9Q$xGGQcT0Kn1VPcFztbSCpbDxbogcZSjAQuM6qv126Qes';
 
-// async function registerUser({
-//   body,
-// }: RequestData<AuthorizationMessage<RegisterUserMessage>>): Promise<AnySuccessData> {
-//   const { username, password } = body.data.register_user.user;
+async function registerUser({
+  body,
+}: RequestData<AuthorizationMessage<RegisterUserMessageBody>>): Promise<AnySuccessData> {
+  const { username, password } = body.data.register_user.user;
 
-//   if (!username || !password) {
-//     throw new BadRequestError('You must supply a username and password');
-//   }
+  if (!username || !password) {
+    throw new BadRequestError('You must supply a username and password');
+  }
 
-//   const users = getRepository(UserEntity);
+  const users = getRepository(UserEntity);
 
-//   const existing_user = await users.findOne({ username });
+  const existing_user = await users.findOne({ username });
 
-//   if (existing_user) {
-//     throw new BadRequestError('User is already registered');
-//   }
+  if (existing_user) {
+    throw new BadRequestError('User is already registered');
+  }
 
-//   const hashed_password = await argonHash(password);
+  const hashed_password = await argonHash(password);
 
-//   const result = await users.insert({
-//     username,
-//     password: hashed_password,
-//   });
+  const result = await users.insert({
+    username,
+    password: hashed_password,
+  });
 
-//   console.log(hashed_password, result);
+  console.log(hashed_password, result);
 
-//   return {
-//     message: 'User registered',
-//   };
-// }
+  return {
+    message: 'User registered',
+  };
+}
 
-// async function loginUser({
-//   body,
-// }: RequestData<AuthorizationMessage<LoginUserMessage>>): Promise<LoginUserSuccess> {
-//   const { username, password } = body.data.login.user;
+async function loginUser({
+  body,
+}: RequestData<AuthorizationMessage<LoginUserMessageBody>>): Promise<LoginUserSuccess> {
+  const { username, password } = body.data.login.user;
 
-//   if (!username || !password) {
-//     throw new BadRequestError('You must supply a username and password');
-//   }
+  if (!username || !password) {
+    throw new BadRequestError('You must supply a username and password');
+  }
 
-//   const users = getRepository(UserEntity);
+  const users = getRepository(UserEntity);
 
-//   const existing_user = await users.findOne({ username });
+  const existing_user = await users.findOne({ username });
 
-//   const { username: db_username, password: db_password_hash } = existing_user ?? {
-//     username: '',
-//     password: KNOWN_HASH,
-//   };
+  const { password: db_password_hash } = existing_user ?? {
+    password: KNOWN_HASH,
+  };
 
-//   // Why bother hashing at all when you know the user doesnt exist?
-//   // By always attempting to hash verify a password, you make sure that attackers cannot
-//   // ascertain existing users by returning an error early for a missing DB user.
-//   const isMatchingPassword = await argonVerify(
-//     db_password_hash,
-//     db_password_hash === KNOWN_HASH ? 'definitely_incorrect' : password
-//   );
+  // Why bother hashing at all when you know the user doesnt exist?
+  // By always attempting to hash verify a password, you make sure that attackers cannot
+  // ascertain existing users by returning an error early for a missing DB user.
+  const isMatchingPassword = await argonVerify(
+    db_password_hash,
+    db_password_hash === KNOWN_HASH ? 'definitely_incorrect' : password
+  );
 
-//   if (!isMatchingPassword) {
-//     throw new BadAuthorizationError('Invalid username or password');
-//   }
+  if (!isMatchingPassword || !existing_user) {
+    throw new BadAuthorizationError('Invalid username or password');
+  }
 
-//   return {
-//     message: 'Logged in successfully',
-//     access_token: '',
-//   };
-// }
+  const session = newSession();
 
-// export const registerUserHandler = validate(
-//   validateWithJoi(RegisterUserMessageSchema),
-//   registerUser
-// );
+  const session_entity = new SessionEntity(session);
+
+  const sessions = getRepository(SessionEntity);
+
+  session_entity.user = existing_user;
+
+  sessions.save(session_entity);
+
+  return {
+    message: 'Logged in successfully',
+    username,
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    expiry: parseISO(session.created_at).getTime() + session.valid_for,
+  };
+}
+
+export const loginUserHandler = validate(validateWithJoi(LoginUserMessageSchema), loginUser);
+
+export const registerUserHandler = validate(
+  validateWithJoi(RegisterUserMessageSchema),
+  registerUser
+);

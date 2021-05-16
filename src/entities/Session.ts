@@ -1,5 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { UserEntity } from './User';
+import { v4 as uuid } from 'uuid';
+import { formatISO } from 'date-fns';
+
+const MILLISECOND_DAY = 1000 * 60 * 60 * 24;
 
 export interface Session {
   id: string;
@@ -28,4 +32,18 @@ export class SessionEntity implements Session {
 
   @Column({ name: 'valid_for', type: 'int' })
   valid_for!: number;
+
+  constructor(session: Session) {
+    Object.assign(this, session);
+  }
+}
+
+export function newSession(valid_for = MILLISECOND_DAY): Session {
+  return {
+    id: uuid(),
+    access_token: uuid(),
+    refresh_token: uuid(),
+    created_at: formatISO(new Date()),
+    valid_for,
+  };
 }
