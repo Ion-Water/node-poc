@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { SessionEntity } from './Session';
 interface User {
   id?: number;
   username: string;
@@ -15,6 +16,9 @@ export class UserEntity implements User {
 
   @Column({ name: 'password', type: 'text' })
   password!: string;
+
+  @OneToMany(() => SessionEntity, (s) => s.user)
+  sessions!: SessionEntity[];
 
   constructor(user: User) {
     Object.assign(this, user);

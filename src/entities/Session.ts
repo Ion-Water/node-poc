@@ -15,7 +15,7 @@ export class SessionEntity implements Session {
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id' })
-  user_id!: UserEntity;
+  user!: UserEntity;
 
   @Column({ name: 'access_token', type: 'text' })
   access_token!: string;
