@@ -10,6 +10,7 @@
     "start": "node dist/index",
     "migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate",
     "migration:create": "ts-node ./node_modules/typeorm/cli.js migration:create",
+    "migration:run": "ts-node ./node_modules/typeorm/cli.js migration:run",
     "postinstall": "npx tsc"
   },
   "devDependencies": {

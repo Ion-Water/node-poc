@@ -16,7 +16,7 @@ export default {
     },
   },
   entities: ['src/entities/*.ts'],
-  migrationsTableName: 'typeorm_mgirations',
+  migrationsTableName: 'typeorm_migrations',
   migrations: ['database/migration/*.ts'],
   cli: {
     migrationsDir: 'database/migration',
