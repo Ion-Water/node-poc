@@ -8,7 +8,6 @@ import { v4 as uuid } from 'uuid';
 interface SendMessageRequest {
   type: 'send';
   target: string;
-  // conversation?: string; // TODO: Should be able to link messages together
   content: {
     // TODO: This can actually be anything, it's up to the client to understand it.
     // This is just a hardcoding of a hypothetical "message" type of content

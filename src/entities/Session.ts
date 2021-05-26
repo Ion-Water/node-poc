@@ -3,7 +3,7 @@ import { UserEntity } from './User';
 import { v4 as uuid } from 'uuid';
 import { formatISO } from 'date-fns';
 
-const MILLISECOND_DAY = 1000 * 60 * 60 * 24;
+const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
 
 export interface Session {
   id: string;
@@ -38,7 +38,7 @@ export class SessionEntity implements Session {
   }
 }
 
-export function newSession(valid_for = MILLISECOND_DAY): Session {
+export function newSession(valid_for = ONE_DAY_IN_MILLISECONDS): Session {
   return {
     id: uuid(),
     access_token: uuid(),

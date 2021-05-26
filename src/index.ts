@@ -3,7 +3,7 @@ import { sendHandler } from './api/send';
 import { createRoute } from './router';
 import { start } from './server';
 import { config } from 'dotenv';
-import { loginUserHandler, registerUserHandler } from './api/user-db';
+import { loginUserHandler, registerUserHandler } from './api/user';
 
 config();
 
