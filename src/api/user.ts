@@ -11,12 +11,15 @@ import {
   BadAuthorizationError,
   BadRequestError,
   LoginUserMessageSchema,
+  InternalServerError,
 } from '@ion-water/node-sdk';
+
 import { UserEntity } from '../entities/User';
-import { getRepository } from 'typeorm';
 import { hash as argonHash, verify as argonVerify } from 'argon2';
 import { newSession, SessionEntity } from '../entities/Session';
 import { parseISO } from 'date-fns';
+import { getMongoClient } from '../mongo';
+import { v4 as uuid } from 'uuid';
 
 // This hash is the hashed value of 'password';
 const KNOWN_HASH =
@@ -31,25 +34,33 @@ async function registerUser({
     throw new BadRequestError('You must supply a username and password');
   }
 
-  const users = getRepository(UserEntity);
+  const mongo = await getMongoClient();
 
-  const existing_user = await users.findOne({ username });
+  if (mongo === null) {
+    throw new InternalServerError('Unable to connect to MongoDB');
+  }
+
+  const authdb = mongo.db('ionwater').collection('authentication');
+
+  const existing_user = await authdb.findOne({ username });
 
   if (existing_user) {
     throw new BadRequestError('User is already registered');
   }
 
-  const hashed_password = await argonHash(password);
+  const authentication_key = await argonHash(password);
 
-  const result = await users.insert({
+  const result = await authdb.insertOne({
+    user_id: uuid(),
     username,
-    password: hashed_password,
+    authentication_key,
   });
 
-  console.log(hashed_password, result);
+  console.log(authentication_key, result);
 
   return {
     message: 'User registered',
+    user_id: result.insertedId,
   };
 }
 
